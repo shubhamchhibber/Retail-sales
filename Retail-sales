@@ -1,0 +1,330 @@
+1.How many % of people buy 3 or more items in Yangon in health and beauty
+
+select
+((Num/Den)*100) as [People %]
+
+from
+(
+select 
+CONVERT(float, count([Invoice ID])) as Den,
+Num
+
+from ['supermarket_sales $'], 
+(
+select 
+convert(float,count([Invoice ID])) as Num
+
+from ['supermarket_sales $']
+
+where
+[Product line]='Health and beauty' and Branch = 'a' and Quantity >= 3
+) as n
+
+where 
+Branch = 'a'
+
+group by
+n.Num
+) as d
+
+result
+People %
+11.76470588
+
+
+2.How many people are member in city in week 1 who have purchase 1 item
+
+Select
+count(cc.[Customer type]) AS MEM_PURCH_1
+From
+['supermarket_sales $'] as s
+join
+City_Table$ as c
+on
+s.Branch = c.Branch
+join
+Customer_Type_Table$ as cc
+on
+s.[Invoice ID]=cc.[Invoice ID]
+Where
+s.Quantity=1 and c.Branch = 'B' and cc.[Customer type] = 'Member' and s.week = 1
+
+Result
+MEM_PURCH_1
+8
+
+
+3.In all three city how many are member and non member?
+
+Select
+c.city,
+cc.[Customer type],
+
+Count(cc.[Customer type]) AS Total_Members
+
+From NewProject.dbo.Customer_Type_Table$ as cc
+join 
+NewProject.dbo.['supermarket_sales $']as s
+on
+cc.[Invoice ID] = s.[Invoice ID]
+join
+NewProject.dbo.City_Table$ as c
+on 
+s.Branch = c.Branch
+Group By
+c.city, cc.[Customer type]
+order by
+c.City;
+
+Result
+city	Customer type	Total_Members
+Mandalay	Member	165
+Mandalay	Normal	167
+Naypyitaw	Member	169
+Naypyitaw	Normal	159
+Yangon	Member	167
+Yangon	Normal	173
+
+
+4.Gross margin by category in each city
+
+Select
+c.city,
+([Product line])as Catagory,
+Sum(s.[gross income]) AS TGM
+From ['supermarket_sales $'] as s
+Join 
+NewProject.dbo.City_Table$ as c
+on
+s.Branch= c.branch
+group by
+[Product line],c.city
+Order by
+1;
+
+Result
+city	Catagory	TGM
+Mandalay	Electronic accessories	811.9735
+Mandalay	Fashion accessories	781.5865
+Mandalay	Food and beverages	724.5185
+Mandalay	Health and beauty	951.46
+Mandalay	Home and lifestyle	835.6745
+Mandalay	Sports and travel	951.819
+Naypyitaw	Electronic accessories	903.2845
+Naypyitaw	Fashion accessories	1026.67
+Naypyitaw	Food and beverages	1131.755
+Naypyitaw	Health and beauty	791.206
+Naypyitaw	Home and lifestyle	661.693
+Naypyitaw	Sports and travel	750.568
+Yangon	Electronic accessories	872.2435
+Yangon	Fashion accessories	777.7385
+Yangon	Food and beverages	817.2905
+Yangon	Health and beauty	599.893
+Yangon	Home and lifestyle	1067.4855
+Yangon	Sports and travel	922.5095
+
+
+5.Which category has maximum margin in Yangon city
+
+Select 
+[Product line],
+[gross income]as Max_Margin_Yangon
+From 
+['supermarket_sales $'] as s
+Where
+[gross income] IN 
+(
+ select 
+ MAX ([gross income])
+ from 
+ ['supermarket_sales $']
+ where 
+ Branch = 'A'
+)
+
+Result
+Product line	Max_Margin_Yangon
+Fashion accessories	49.49
+
+
+ 6.What is the % of payment type by member customer in Yangon
+
+select
+nm.Pay_type,
+
+((Member_Yangon/[total Members])*100) as [Pay. type % by mem]
+
+from
+(
+select
+Pay_type,
+Member_Yangon,
+convert(float,COUNT(ct.[Customer type])) as [total Members]
+
+from ['supermarket_sales $'] as s
+ join
+ Customer_Type_Table$ as ct
+ on 
+ s.[Invoice ID] = ct.[Invoice ID],
+(
+select
+s.Payment as Pay_type,
+Convert(Float,count(ct.[Customer type])) as Member_Yangon
+ from 
+ ['supermarket_sales $'] as s
+ join
+ Customer_Type_Table$ as ct
+ on 
+ s.[Invoice ID] = ct.[Invoice ID]
+ where 
+ ct.[Customer type] = 'Member' and s.Branch = 'A'
+ group by
+ s.Payment
+ ) as m
+ 
+ where 
+ s.Branch = 'A'
+
+ group by
+ m.Member_Yangon, m.Pay_type
+ ) as nm
+ 
+ Result
+ Pay_type	Pay. type % by mem
+Cash	16.47058824
+Credit card	14.41176471
+Ewallet	18.23529412
+
+
+7.In which hour max goods sale
+ 
+select 
+s.Hour,
+Quantity
+From
+['supermarket_sales $'] as s
+where
+Quantity = 
+(
+  Select 
+  Max (Quantity)
+  from ['supermarket_sales $']
+)
+group by
+s.Hour, Quantity
+
+Result
+Hour	Quantity
+10	10
+11	10
+12	10
+13	10
+14	10
+15	10
+16	10
+17	10
+18	10
+19	10
+20	10
+
+
+8.How many people are purchasing more than $100 in Yangon
+
+select 
+Gender,
+Count([Invoice ID]) AS [Purchasing more than $100 in Yangon]
+From
+['supermarket_sales $']
+Where
+Sales >= 100 and Branch = 'A'
+Group by
+Gender
+
+Result
+Gender	Purchasing more than $100 in Yangon
+Female	136
+Male	133
+
+
+9.Which week has the max sales?
+
+Select 
+Max(Sales) as [Max sales],
+Week
+From
+['supermarket_sales $']
+group by
+Week
+order by
+1 desc
+
+Result
+Max sales	Week
+1042.65	1
+1039.29	31
+1034.46	9
+1022.49	6
+1002.12	36
+950.25	5
+939.54	22
+918.729	10
+833.595	27
+829.08	14
+822.255	18
+603.624	23
+
+
+10.Sum tax bracket by product?
+
+Select 
+[Product line],
+Sum([Tax 5%]) as [Total tax]
+
+From ['supermarket_sales $']
+
+group by
+[Product line]
+
+Result
+Product line	Total tax
+Fashion accessories	2585.995
+Health and beauty	2342.559
+Electronic accessories	2587.5015
+Food and beverages	2673.564
+Sports and travel	2624.8965
+Home and lifestyle	2564.853
+
+
+11. Product quantity sold by area
+
+select
+branch,
+[product line],
+sum(Quantity) as QTY
+
+from ['supermarket_sales $']
+
+group by
+Branch, [Product line]
+
+Result
+branch	product line	QTY
+A	Electronic accessories	322
+B	Electronic accessories	316
+C	Electronic accessories	333
+A	Fashion accessories	263
+B	Fashion accessories	297
+C	Fashion accessories	342
+A	Food and beverages	313
+B	Food and beverages	270
+C	Food and beverages	369
+A	Health and beauty	257
+B	Health and beauty	320
+C	Health and beauty	277
+A	Home and lifestyle	371
+B	Home and lifestyle	295
+C	Home and lifestyle	245
+A	Sports and travel	333
+B	Sports and travel	322
+C	Sports and travel	265
+
